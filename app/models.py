@@ -147,7 +147,10 @@ class Guest(db.Model):
         self.token = secrets.token_urlsafe(24)
         self.invited_at = datetime.utcnow()
         self.expires_at = self.invited_at + timedelta(days=valid_days)
-        if self.status == STATUS_ADDED:
+        # Помечаем «Приглашён», кроме уже отмеченных «Присутствует».
+        # (Проверять == STATUS_ADDED нельзя: у нового объекта значение по
+        #  умолчанию ещё не применено и равно None.)
+        if self.status != STATUS_PRESENT:
             self.status = STATUS_INVITED
         return self.token
 

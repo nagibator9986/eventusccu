@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Экспорт по группам — {{ COLLEGE_NAME }}{% endblock %}
+
+{% block content %}
+<div class="container stack">
+  <div class="page-title">
+    <h1>Экспорт по группам</h1>
+    <small>Списки студентов и гостей с готовыми ссылками-приглашениями (Excel)</small>
+  </div>
+
+  <a class="btn btn--gold btn--lg btn--block" href="{{ url_for('admin.export_all') }}">
+    ⬇ Скачать все группы (один файл, лист на группу)
+  </a>
+
+  {% if groups %}
+  <div class="list">
+    {% for g in groups %}
+    <div class="list-item">
+      <div class="list-item__main">
+        <div class="list-item__name">{{ g.group or '— без группы —' }}</div>
+        <div class="list-item__meta">
+          студентов: {{ g.students }} · гостей: {{ g.guests }} · со ссылкой: {{ g.links }}
+        </div>
+      </div>
+      <a class="btn btn--sm" href="{{ url_for('admin.export_group', group=g.group) }}">⬇ Скачать</a>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty"><div class="empty__icon">📄</div>Данных пока нет — добавьте студентов.</div>
+  {% endif %}
+
+  <div class="card small muted">
+    В файле для каждой группы: ФИО студента, ФИО гостя, кем приходится,
+    <b>ссылка-приглашение</b> (кликабельная), срок действия и статус.
+    Ссылку можно скопировать прямо из ячейки и отправить родителю.
+  </div>
+</div>
+{% endblock %}

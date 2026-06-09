@@ -31,6 +31,7 @@
         <a href="{{ url_for('admin.dashboard') }}" class="{{ 'is-active' if request.endpoint == 'admin.dashboard' }}">Сводка</a>
         <a href="{{ url_for('admin.students') }}" class="{{ 'is-active' if request.endpoint and request.endpoint.startswith('admin.student') }}">Студенты</a>
         <a href="{{ url_for('admin.guests_overview') }}" class="{{ 'is-active' if request.endpoint == 'admin.guests_overview' }}">Гости</a>
+        <a href="{{ url_for('admin.export_page') }}" class="{{ 'is-active' if request.endpoint and request.endpoint.startswith('admin.export') }}">Экспорт</a>
         <a href="{{ url_for('scan.scanner') }}" class="{{ 'is-active' if request.endpoint == 'scan.scanner' }}">Сканер</a>
         <a href="{{ url_for('admin.users') }}" class="{{ 'is-active' if request.endpoint and request.endpoint.startswith('admin.user') }}">Сотрудники</a>
         {% else %}

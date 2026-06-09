@@ -1,11 +1,17 @@
 """Админ-панель: студенты, гости, приглашения, сотрудники."""
+import io
+import re
+from datetime import timedelta
+
 from flask import (
     Blueprint,
     abort,
+    current_app,
     flash,
     redirect,
     render_template,
     request,
+    send_file,
     url_for,
 )
 from flask_login import current_user, login_required
@@ -312,3 +318,139 @@ def user_delete(uid):
     db.session.commit()
     flash("Пользователь удалён.", "success")
     return redirect(url_for("admin.users"))
+
+
+# ===========================================================================
+#  Экспорт по группам (Excel со ссылками-приглашениями)
+# ===========================================================================
+def _distinct_groups() -> list[str]:
+    rows = (
+        db.session.query(Student.group_name)
+        .distinct()
+        .order_by(Student.group_name)
+        .all()
+    )
+    return [r[0] for r in rows if r[0] is not None]
+
+
+def _fmt_date(value) -> str:
+    if not value:
+        return ""
+    offset = int(current_app.config.get("DISPLAY_TZ_OFFSET", 5))
+    return (value + timedelta(hours=offset)).strftime("%d.%m.%Y")
+
+
+def _safe_sheet_title(name: str, used: set) -> str:
+    title = re.sub(r"[:\\/?*\[\]]", " ", name or "Группа").strip()[:31] or "Группа"
+    base, candidate, i = title, title, 1
+    while candidate in used:
+        i += 1
+        suffix = f" ({i})"
+        candidate = base[: 31 - len(suffix)] + suffix
+    used.add(candidate)
+    return candidate
+
+
+def _build_export(groups: list[str]) -> io.BytesIO:
+    """Книга Excel: по листу на группу, с готовыми ссылками-приглашениями."""
+    from openpyxl import Workbook
+    from openpyxl.styles import Alignment, Font, PatternFill
+    from openpyxl.utils import get_column_letter
+
+    headers = [
+        "№", "ФИО студента", "Группа", "ФИО гостя", "Кем приходится",
+        "Ссылка-приглашение", "Действует до", "Статус",
+    ]
+    widths = [5, 34, 16, 30, 14, 52, 14, 14]
+
+    wb = Workbook()
+    wb.remove(wb.active)
+    used: set = set()
+    header_fill = PatternFill("solid", fgColor="0A2E5C")
+    header_font = Font(color="FFFFFF", bold=True)
+
+    for group in groups:
+        students = (
+            Student.query.filter_by(group_name=group)
+            .order_by(Student.full_name)
+            .all()
+        )
+        ws = wb.create_sheet(_safe_sheet_title(group, used))
+        ws.append(headers)
+        for col, w in enumerate(widths, 1):
+            ws.column_dimensions[get_column_letter(col)].width = w
+        for cell in ws[1]:
+            cell.fill = header_fill
+            cell.font = header_font
+            cell.alignment = Alignment(horizontal="center")
+        ws.freeze_panes = "A2"
+
+        n = 0
+        for st in students:
+            if st.guests:
+                for g in st.guests:
+                    n += 1
+                    link = invite_url(g.token) if g.token else ""
+                    ws.append([
+                        n, st.full_name, st.group_name, g.full_name, g.relation,
+                        link, _fmt_date(g.expires_at), g.status_label,
+                    ])
+                    if link:
+                        c = ws.cell(row=ws.max_row, column=6)
+                        c.hyperlink = link
+                        c.font = Font(color="1F5FAE", underline="single")
+            else:
+                n += 1
+                ws.append([n, st.full_name, st.group_name, "", "", "", "", "нет гостя"])
+
+    bio = io.BytesIO()
+    wb.save(bio)
+    bio.seek(0)
+    return bio
+
+
+@admin_bp.route("/export")
+def export_page():
+    groups = _distinct_groups()
+    info = []
+    for g in groups:
+        students = Student.query.filter_by(group_name=g).all()
+        guests = sum(len(s.guests) for s in students)
+        with_link = sum(1 for s in students for x in s.guests if x.token)
+        info.append({
+            "group": g,
+            "students": len(students),
+            "guests": guests,
+            "links": with_link,
+        })
+    return render_template("admin/export.html", groups=info)
+
+
+@admin_bp.route("/export/all.xlsx")
+def export_all():
+    groups = _distinct_groups()
+    if not groups:
+        flash("Нет данных для экспорта.", "error")
+        return redirect(url_for("admin.export_page"))
+    bio = _build_export(groups)
+    return send_file(
+        bio,
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        as_attachment=True,
+        download_name="Приглашения по группам.xlsx",
+    )
+
+
+@admin_bp.route("/export/group.xlsx")
+def export_group():
+    group = (request.args.get("group") or "").strip()
+    if not group or not Student.query.filter_by(group_name=group).first():
+        abort(404)
+    bio = _build_export([group])
+    safe = re.sub(r"[\\/:*?\"<>|]", "_", group)
+    return send_file(
+        bio,
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        as_attachment=True,
+        download_name=f"Приглашения {safe}.xlsx",
+    )
