@@ -22,3 +22,6 @@ instance/
 .idea/
 .vscode/
 *.log
+
+# Исходные рабочие xlsx в корне не коммитим (канонический файл — data/graduates.xlsx)
+/*.xlsx

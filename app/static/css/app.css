@@ -475,6 +475,9 @@ select.input {
   color: #cfe0f6; text-align: center; padding: 24px; gap: 12px;
 }
 
+/* Пустой контейнер результата не должен занимать место/отступ */
+#result:empty { display: none; }
+
 /* Карточка результата сканирования */
 .result {
   border-radius: var(--radius);

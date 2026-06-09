@@ -6,6 +6,7 @@ Flask-WTF==1.2.2
 qrcode[pil]==8.0
 Pillow>=10.0
 python-dotenv>=1.0
+openpyxl==3.1.5  # импорт списка выпускников/родителей из .xlsx
 
 # Production WSGI-сервер (используется на Railway / в проде)
 gunicorn==23.0.0

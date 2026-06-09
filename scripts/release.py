@@ -59,7 +59,25 @@ def main() -> None:
             "Контролёр входа",
         )
         db.session.commit()
-        print("[release] готово")
+
+    # Импорт списка выпускников/родителей из data/graduates.xlsx (идемпотентно).
+    # Отключается переменной IMPORT_ON_DEPLOY=0. Пригласительные генерируются,
+    # если IMPORT_GENERATE_INVITES != "0".
+    if os.environ.get("IMPORT_ON_DEPLOY", "1") != "0":
+        try:
+            from scripts.import_data import DEFAULT_FILE, import_records, parse_workbook
+
+            if DEFAULT_FILE.exists():
+                records = parse_workbook(DEFAULT_FILE)
+                gen = os.environ.get("IMPORT_GENERATE_INVITES", "1") != "0"
+                stats = import_records(records, generate_invites=gen)
+                print(f"[release] импорт данных: {stats}")
+            else:
+                print(f"[release] файл данных не найден ({DEFAULT_FILE}) — импорт пропущен")
+        except Exception as exc:  # импорт не должен ронять деплой
+            print(f"[release] предупреждение: импорт не выполнен: {exc}")
+
+    print("[release] готово")
 
 
 if __name__ == "__main__":

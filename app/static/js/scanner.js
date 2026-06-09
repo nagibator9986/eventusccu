@@ -109,9 +109,31 @@
       });
   }
 
+  // Прокрутить к карточке результата, чтобы её было видно (на телефоне она ниже камеры)
+  function focusResult() {
+    if (!els.result) return;
+    try {
+      els.result.scrollIntoView({ behavior: "smooth", block: "center" });
+    } catch (e) {
+      try { els.result.scrollIntoView(); } catch (e2) {}
+    }
+  }
+
+  // Перевести надпись библиотеки «Scanner paused» на русский
+  function translatePausedLabel() {
+    var root = document.getElementById("qr-reader");
+    if (!root) return;
+    var divs = root.getElementsByTagName("div");
+    for (var i = 0; i < divs.length; i++) {
+      if (divs[i].childElementCount === 0 && /scanner paused/i.test(divs[i].innerText || "")) {
+        divs[i].innerText = "Камера на паузе";
+      }
+    }
+  }
+
   function pauseScanning() {
     if (reader && running && !paused && reader.pause) {
-      try { reader.pause(true); paused = true; } catch (e) {}
+      try { reader.pause(true); paused = true; setTimeout(translatePausedLabel, 30); } catch (e) {}
     }
   }
   function resumeScanning() {
@@ -208,6 +230,7 @@
       '<div class="result"><div class="center" style="padding:18px;">' +
       '<span class="spinner" style="border-color:rgba(10,46,92,.2);border-top-color:var(--navy);"></span>' +
       '<div class="muted" style="margin-top:10px;">Проверяем…</div></div></div>';
+    focusResult();
   }
 
   function renderError(msg) {
@@ -218,6 +241,7 @@
       '<p class="center muted" style="margin-top:6px;">' + esc(msg) + "</p>" +
       scanNextBtn() + "</div>";
     bindNext();
+    focusResult();
   }
 
   function renderGuest(guest, token) {
@@ -256,6 +280,7 @@
       els.result.innerHTML = "";
       resumeScanning();
     });
+    focusResult();
   }
 
   function renderConfirmed(guest, already) {
@@ -271,6 +296,7 @@
       '<div class="result__row"><dt>Время</dt><dd>' + esc(guest.checked_in_at || "—") + "</dd></div></dl>" +
       scanNextBtn() + "</div>";
     bindNext();
+    focusResult();
   }
 
   function bindNext() {

@@ -17,13 +17,13 @@
     </div>
   </div>
 
+  <!-- Результат: сразу под камерой, чтобы был виден без прокрутки -->
+  <div id="result" aria-live="polite" aria-atomic="true"></div>
+
   <button class="btn btn--lg btn--block" id="btnStart" type="button">Включить камеру</button>
   <button class="btn btn--lg btn--block btn--ghost" id="btnStop" type="button" hidden>Остановить камеру</button>
 
   <div class="scanner__hint" id="scanHint" hidden>Сканирование… поднесите QR в рамку</div>
-
-  <!-- Результат -->
-  <div id="result" aria-live="polite" aria-atomic="true"></div>
 
   <!-- Ручной ввод (если камера недоступна) -->
   <details class="card">
