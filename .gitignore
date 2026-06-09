@@ -23,5 +23,8 @@ instance/
 .vscode/
 *.log
 
-# Исходные рабочие xlsx в корне не коммитим (канонический файл — data/graduates.xlsx)
+# Персональные данные НЕ коммитим в (публичный) репозиторий
 /*.xlsx
+data/*.xlsx
+IMPORT_DATA_B64.txt
+*.b64
