@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Гости — {{ COLLEGE_NAME }}{% endblock %}
+
+{% block content %}
+<div class="container stack">
+  <div class="page-title">
+    <h1>Все гости</h1>
+    <small>Списки приглашённых и присутствующих</small>
+  </div>
+
+  <form method="get" action="{{ url_for('admin.guests_overview') }}">
+    <input class="input" type="search" name="q" value="{{ q }}" placeholder="🔍 Поиск по гостю, студенту, группе">
+    {% if status %}<input type="hidden" name="status" value="{{ status }}">{% endif %}
+  </form>
+
+  <div class="chips">
+    <a class="chip {{ 'is-active' if not status }}" href="{{ url_for('admin.guests_overview', q=q) }}">Все</a>
+    <a class="chip {{ 'is-active' if status == 'present' }}" href="{{ url_for('admin.guests_overview', status='present', q=q) }}">Присутствуют</a>
+    <a class="chip {{ 'is-active' if status == 'invited' }}" href="{{ url_for('admin.guests_overview', status='invited', q=q) }}">Приглашены</a>
+    <a class="chip {{ 'is-active' if status == 'added' }}" href="{{ url_for('admin.guests_overview', status='added', q=q) }}">Без приглашения</a>
+  </div>
+
+  {% if guests %}
+  <div class="list">
+    {% for g in guests %}
+    <a class="list-item" href="{{ url_for('admin.student_detail', sid=g.student_id) }}#guest-{{ g.id }}">
+      <div class="avatar">{{ g.full_name[:1] }}</div>
+      <div class="list-item__main">
+        <div class="list-item__name">{{ g.full_name }}</div>
+        <div class="list-item__meta">{{ g.relation }} · {{ g.student.full_name if g.student else '—' }} ({{ g.student.group_name or '—' if g.student else '—' }})</div>
+      </div>
+      <span class="badge badge--{{ g.status }} badge--dot">{{ g.status_label }}</span>
+    </a>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty"><div class="empty__icon">🔎</div>Ничего не найдено.</div>
+  {% endif %}
+</div>
+{% endblock %}

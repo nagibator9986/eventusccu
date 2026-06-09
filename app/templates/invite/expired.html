@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0a2e5c">
+  <title>Срок приглашения истёк — {{ COLLEGE_NAME }}</title>
+  <link rel="icon" href="{{ url_for('static', filename='img/logo.svg') }}" type="image/svg+xml">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+</head>
+<body>
+<div class="invite-page">
+  <div class="notice-card">
+    <div class="notice-card__icon">⏳</div>
+    <h1>Срок действия истёк</h1>
+    <p class="muted">
+      Приглашение для <strong>{{ guest.full_name }}</strong>
+      (студент {{ guest.student.full_name }}) больше недействительно.
+    </p>
+    <p class="muted small">Истекло {{ guest.expires_at | dlong }}. Запросите новую ссылку у организаторов.</p>
+  </div>
+  <p class="invite-foot">{{ COLLEGE_NAME }} · {{ COLLEGE_SITE }}</p>
+</div>
+</body>
+</html>

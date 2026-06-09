@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}Сотрудники — {{ COLLEGE_NAME }}{% endblock %}
+
+{% block content %}
+<div class="container stack">
+  <div class="page-title">
+    <h1>Сотрудники</h1>
+    <small>Администраторы и контролёры входа (сканеры)</small>
+  </div>
+
+  <details class="card">
+    <summary style="font-weight:700;cursor:pointer;color:var(--navy);">+ Добавить сотрудника</summary>
+    <form method="post" action="{{ url_for('admin.user_create') }}" style="margin-top:14px;">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="form-grid form-grid--2">
+        <div class="field"><label>Логин *</label><input class="input" name="username" required autocapitalize="none" autocorrect="off"></div>
+        <div class="field"><label>Имя</label><input class="input" name="full_name"></div>
+      </div>
+      <div class="form-grid form-grid--2">
+        <div class="field">
+          <label>Роль</label>
+          <select class="input" name="role">
+            <option value="scanner">Контролёр входа (сканер)</option>
+            <option value="admin">Администратор</option>
+          </select>
+        </div>
+        <div class="field"><label>Пароль * (мин. 6)</label><input class="input" name="password" type="text" required></div>
+      </div>
+      <button class="btn btn--block" type="submit">Создать сотрудника</button>
+    </form>
+  </details>
+
+  <div class="list">
+    {% for u in users %}
+    <div class="list-item" style="{{ 'opacity:.55;' if not u.active }}">
+      <div class="avatar">{{ (u.full_name or u.username)[:1] | upper }}</div>
+      <div class="list-item__main">
+        <div class="list-item__name">{{ u.full_name or u.username }}</div>
+        <div class="list-item__meta">
+          @{{ u.username }} ·
+          {% if u.is_admin %}<span style="color:var(--navy);font-weight:700;">Администратор</span>{% else %}Сканер{% endif %}
+          {% if not u.active %} · отключён{% endif %}
+        </div>
+      </div>
+      <div class="btn-row">
+        <form method="post" action="{{ url_for('admin.user_toggle', uid=u.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn btn--sm btn--ghost" type="submit">{{ 'Включить' if not u.active else 'Откл.' }}</button>
+        </form>
+        <form method="post" action="{{ url_for('admin.user_delete', uid=u.id) }}" data-confirm="Удалить сотрудника @{{ u.username }}?">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn btn--sm btn--danger" type="submit">✕</button>
+        </form>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

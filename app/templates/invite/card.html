@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0a2e5c">
+  <title>Пригласительный билет — {{ COLLEGE_NAME }}</title>
+  <link rel="icon" href="{{ url_for('static', filename='img/logo.svg') }}" type="image/svg+xml">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+</head>
+<body>
+<div class="invite-page">
+  <div class="ticket">
+    <div class="ticket__top">
+      <img class="ticket__logo" src="{{ url_for('static', filename='img/logo.svg') }}" alt="{{ COLLEGE_SHORT }}">
+      <div class="ticket__college">{{ COLLEGE_NAME }}</div>
+      <span class="ticket__kicker">Пригласительный билет</span>
+      <h1 class="ticket__title">Вручение дипломов</h1>
+      <p class="ticket__event">{{ EVENT_TITLE }}</p>
+    </div>
+
+    <div class="ticket__perf"><span class="ticket__perf-line"></span></div>
+
+    <div class="ticket__body">
+      <div class="ticket__greeting">Уважаемый(ая)</div>
+      <div class="ticket__guest">{{ guest.full_name }}</div>
+
+      <div class="ticket__relation">{{ guest.relation }} · приглашается как {{ guest.relation_phrase }}</div>
+      <div class="ticket__greeting">студента(ки)</div>
+      <div class="ticket__student">{{ guest.student.full_name }}</div>
+      <div class="ticket__group">
+        группа {{ guest.student.group_name or '—' }}{% if guest.student.specialty %} · {{ guest.student.specialty }}{% endif %}
+      </div>
+
+      <div class="ticket__ornament">✦ ✦ ✦</div>
+
+      <div class="ticket__qr">
+        <img src="{{ qr }}" alt="QR-код приглашения" width="200" height="200">
+      </div>
+      <div class="ticket__qr-cap">Предъявите этот QR-код контролёру на входе</div>
+
+      <div class="ticket__valid">
+        Билет действителен до {{ guest.expires_at | dlong }}<br>
+        Билет именной и рассчитан на одного гостя
+      </div>
+    </div>
+  </div>
+  <p class="invite-foot">{{ COLLEGE_SITE }} · {{ current_year }}</p>
+</div>
+</body>
+</html>

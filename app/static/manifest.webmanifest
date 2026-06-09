@@ -1,0 +1,13 @@
+{
+  "name": "CCU — Электронные приглашения",
+  "short_name": "CCU Invite",
+  "description": "Приглашения и контроль входа на вручение дипломов Колледжа Каспийского университета",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a2e5c",
+  "theme_color": "#0a2e5c",
+  "lang": "ru",
+  "icons": [
+    { "src": "/static/img/logo.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

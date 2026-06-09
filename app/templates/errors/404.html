@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Страница не найдена{% endblock %}
+{% block content %}
+<div class="container">
+  <div class="card center" style="margin-top:8vh;">
+    <div style="font-size:3rem;">🧭</div>
+    <h1>404 — страница не найдена</h1>
+    <p class="muted">Возможно, ссылка устарела или введена неверно.</p>
+    <a class="btn" href="{{ url_for('main.index') }}">На главную</a>
+  </div>
+</div>
+{% endblock %}

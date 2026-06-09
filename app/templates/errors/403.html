@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Доступ запрещён{% endblock %}
+{% block content %}
+<div class="container">
+  <div class="card center" style="margin-top:8vh;">
+    <div style="font-size:3rem;">🔒</div>
+    <h1>403 — доступ запрещён</h1>
+    <p class="muted">У вашей учётной записи нет прав для этого раздела.</p>
+    <a class="btn" href="{{ url_for('main.index') }}">На главную</a>
+  </div>
+</div>
+{% endblock %}

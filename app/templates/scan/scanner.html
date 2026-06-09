@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Сканер входа — {{ COLLEGE_NAME }}{% endblock %}
+
+{% block content %}
+<div class="container stack">
+  <div class="page-title">
+    <h1>Сканер входа</h1>
+    <small>Наведите камеру на QR-код из пригласительного билета гостя</small>
+  </div>
+
+  <div class="scanner__viewport">
+    <div id="qr-reader"></div>
+    <div class="scanner__frame" id="scanFrame" hidden></div>
+    <div class="scanner__placeholder" id="scanPlaceholder">
+      <div style="font-size:2.6rem;">📷</div>
+      <div>Нажмите «Включить камеру», чтобы начать сканирование</div>
+    </div>
+  </div>
+
+  <button class="btn btn--lg btn--block" id="btnStart" type="button">Включить камеру</button>
+  <button class="btn btn--lg btn--block btn--ghost" id="btnStop" type="button" hidden>Остановить камеру</button>
+
+  <div class="scanner__hint" id="scanHint" hidden>Сканирование… поднесите QR в рамку</div>
+
+  <!-- Результат -->
+  <div id="result" aria-live="polite" aria-atomic="true"></div>
+
+  <!-- Ручной ввод (если камера недоступна) -->
+  <details class="card">
+    <summary class="muted small" style="cursor:pointer;">Ввести код вручную (если камера недоступна)</summary>
+    <form id="manualForm" style="margin-top:12px;">
+      <div class="field">
+        <label for="manualToken">Код или ссылка из билета</label>
+        <input class="input" id="manualToken" placeholder="Вставьте ссылку или код"
+               autocapitalize="none" autocorrect="off" spellcheck="false" inputmode="text">
+      </div>
+      <button class="btn btn--block" type="submit">Найти гостя</button>
+    </form>
+  </details>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  window.CCU = {
+    lookupUrl: "{{ url_for('scan.api_lookup') }}",
+    checkinUrl: "{{ url_for('scan.api_checkin') }}",
+    csrf: "{{ csrf_token() }}"
+  };
+</script>
+<!-- Библиотека сканера хранится локально (надёжность на входе без внешнего CDN) -->
+<script src="{{ url_for('static', filename='js/html5-qrcode.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/scanner.js') }}" defer></script>
+{% endblock %}

@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}Сводка — {{ COLLEGE_NAME }}{% endblock %}
+
+{% block content %}
+<div class="container stack">
+  <div class="page-title">
+    <h1>Сводка мероприятия</h1>
+    <small>{{ EVENT_TITLE }}</small>
+  </div>
+
+  <div class="stats">
+    <div class="stat">
+      <div class="stat__num">{{ students_count }}</div>
+      <div class="stat__label">Студентов</div>
+    </div>
+    <div class="stat">
+      <div class="stat__num">{{ guests_count }}</div>
+      <div class="stat__label">Гостей всего</div>
+    </div>
+    <div class="stat stat--accent">
+      <div class="stat__num">{{ present_count }}</div>
+      <div class="stat__label">Присутствуют</div>
+    </div>
+    <div class="stat stat--gold">
+      <div class="stat__num">{{ invited_count }}</div>
+      <div class="stat__label">Приглашений выдано</div>
+    </div>
+  </div>
+
+  {% if capacity %}
+  <div class="card">
+    <div class="card__title">Заполняемость зала</div>
+    <div class="row row--between">
+      <strong>{{ present_count }} / {{ capacity }}</strong>
+      <span class="muted small">мест занято</span>
+    </div>
+    <hr class="divider">
+    <div style="height:10px;background:var(--line);border-radius:999px;overflow:hidden;">
+      <div style="height:100%;width:{{ (100 * present_count / capacity) if capacity else 0 }}%;max-width:100%;background:var(--success);"></div>
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="row">
+    <a class="btn grow" href="{{ url_for('admin.students') }}">Управление студентами</a>
+    <a class="btn btn--gold grow" href="{{ url_for('scan.scanner') }}">Открыть сканер</a>
+  </div>
+
+  <div class="card">
+    <div class="card__title">Последние отметки о входе</div>
+    {% if recent %}
+    <div class="list">
+      {% for g in recent %}
+      <div class="list-item" style="box-shadow:none;border:1px solid var(--line);">
+        <div class="avatar">{{ g.full_name[:1] }}</div>
+        <div class="list-item__main">
+          <div class="list-item__name">{{ g.full_name }}</div>
+          <div class="list-item__meta">{{ g.relation }} · {{ g.student.full_name if g.student else '—' }} ({{ g.student.group_name if g.student else '—' }})</div>
+        </div>
+        <span class="muted small">{{ g.checked_in_at | dt }}</span>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty"><div class="empty__icon">🎓</div>Пока никто не отмечен на входе.</div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+{% block title %}{{ student.full_name }} — {{ COLLEGE_NAME }}{% endblock %}
+
+{% block content %}
+<div class="container stack">
+  <a href="{{ url_for('admin.students') }}" class="muted small">‹ К списку студентов</a>
+
+  <div class="card card--pad-lg">
+    <div class="row row--between">
+      <div class="grow">
+        <h1 style="margin-bottom:2px;">{{ student.full_name }}</h1>
+        <div class="muted">
+          {{ student.group_name or 'Без группы' }}{% if student.specialty %} · {{ student.specialty }}{% endif %}
+        </div>
+      </div>
+      <span class="badge badge--invited">{{ student.guests_present }}/{{ student.guests_total }} пришло</span>
+    </div>
+
+    <details style="margin-top:12px;">
+      <summary class="muted small" style="cursor:pointer;">Редактировать / удалить</summary>
+      <form method="post" action="{{ url_for('admin.student_edit', sid=student.id) }}" style="margin-top:12px;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="field"><label>ФИО</label><input class="input" name="full_name" value="{{ student.full_name }}" required></div>
+        <div class="form-grid form-grid--2">
+          <div class="field"><label>Группа</label><input class="input" name="group_name" value="{{ student.group_name }}"></div>
+          <div class="field"><label>Специальность</label><input class="input" name="specialty" value="{{ student.specialty or '' }}"></div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn--sm" type="submit">Сохранить</button>
+        </div>
+      </form>
+      <form method="post" action="{{ url_for('admin.student_delete', sid=student.id) }}"
+            data-confirm="Удалить студента «{{ student.full_name }}» и всех его гостей?" style="margin-top:10px;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn btn--sm btn--danger" type="submit">Удалить студента</button>
+      </form>
+    </details>
+  </div>
+
+  <!-- Гости -->
+  <div class="row row--between">
+    <h2 style="margin:0;">Гости</h2>
+    <span class="muted small">осталось мест: {{ student.seats_left }}</span>
+  </div>
+
+  {% for g in student.guests %}
+  <div class="guest {{ 'is-present' if g.status == 'present' }}" id="guest-{{ g.id }}">
+    <div class="row row--between">
+      <div class="grow">
+        <div class="list-item__name">{{ g.full_name }}</div>
+        <div class="muted small">{{ g.relation }}{% if g.phone %} · {{ g.phone }}{% endif %}</div>
+      </div>
+      <span class="badge badge--{{ g.status }} badge--dot">{{ g.status_label }}</span>
+    </div>
+
+    {% if g.status == 'present' %}
+    <div class="small" style="margin-top:8px;color:var(--success);">
+      ✓ Отмечен: {{ g.checked_in_at | dt }}{% if g.checked_in_by %} ({{ g.checked_in_by.full_name or g.checked_in_by.username }}){% endif %}
+    </div>
+    {% endif %}
+
+    {% if g.token %}
+      <div class="link-box">
+        <input id="link-{{ g.id }}" type="text" readonly value="{{ links[g.id] }}" onclick="this.select()">
+        <button class="btn btn--sm" type="button" data-copy="link-{{ g.id }}">Копировать</button>
+      </div>
+      <div class="small muted" style="margin-top:6px;">Действует до {{ g.expires_at | dlong }}</div>
+      <div class="btn-row" style="margin-top:10px;">
+        <a class="btn btn--sm btn--ghost" href="{{ links[g.id] }}" target="_blank" rel="noopener">Открыть билет ↗</a>
+        <form method="post" action="{{ url_for('admin.guest_invite', gid=g.id) }}"
+              data-confirm="Перевыпустить ссылку? Старая ссылка перестанет работать.">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn btn--sm btn--ghost" type="submit">Перевыпустить</button>
+        </form>
+      </div>
+    {% else %}
+      <form method="post" action="{{ url_for('admin.guest_invite', gid=g.id) }}" style="margin-top:12px;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn btn--gold btn--block" type="submit">🎟 Сгенерировать пригласительное</button>
+      </form>
+    {% endif %}
+
+    <details style="margin-top:10px;">
+      <summary class="muted small" style="cursor:pointer;">Изменить / удалить · {% if g.status == 'present' %}снять отметку{% endif %}</summary>
+      <form method="post" action="{{ url_for('admin.guest_edit', gid=g.id) }}" style="margin-top:10px;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="field"><label>ФИО гостя</label><input class="input" name="full_name" value="{{ g.full_name }}" required></div>
+        <div class="form-grid form-grid--2">
+          <div class="field">
+            <label>Кем приходится</label>
+            <select class="input" name="relation">
+              {% for r in relations %}<option value="{{ r }}" {{ 'selected' if r == g.relation }}>{{ r }}</option>{% endfor %}
+              {% if g.relation not in relations %}<option value="{{ g.relation }}" selected>{{ g.relation }}</option>{% endif %}
+            </select>
+          </div>
+          <div class="field"><label>Телефон</label><input class="input" name="phone" value="{{ g.phone or '' }}" inputmode="tel"></div>
+        </div>
+        <button class="btn btn--sm" type="submit">Сохранить</button>
+      </form>
+      <div class="btn-row" style="margin-top:10px;">
+        {% if g.status == 'present' %}
+        <form method="post" action="{{ url_for('admin.guest_reset', gid=g.id) }}" data-confirm="Снять отметку о присутствии?">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn btn--sm btn--ghost" type="submit">Снять отметку</button>
+        </form>
+        {% endif %}
+        <form method="post" action="{{ url_for('admin.guest_delete', gid=g.id) }}" data-confirm="Удалить гостя «{{ g.full_name }}»?">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn btn--sm btn--danger" type="submit">Удалить гостя</button>
+        </form>
+      </div>
+    </details>
+  </div>
+  {% else %}
+  <p class="muted small">У этого студента пока нет гостей. Добавьте родителя или родственника ниже.</p>
+  {% endfor %}
+
+  <!-- Добавление гостя -->
+  {% if student.seats_left > 0 %}
+  <div class="card">
+    <div class="card__title">Добавить гостя</div>
+    <form method="post" action="{{ url_for('admin.guest_create', sid=student.id) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="field">
+        <label for="g_name">ФИО родителя / родственника *</label>
+        <input class="input" id="g_name" name="full_name" required placeholder="Ахметов Серик Болатович">
+      </div>
+      <div class="form-grid form-grid--2">
+        <div class="field">
+          <label for="g_rel">Кем приходится</label>
+          <select class="input" id="g_rel" name="relation">
+            {% for r in relations %}<option value="{{ r }}">{{ r }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="field">
+          <label for="g_phone">Телефон (необязательно)</label>
+          <input class="input" id="g_phone" name="phone" inputmode="tel" placeholder="+7 ...">
+        </div>
+      </div>
+      <button class="btn btn--block" type="submit">+ Добавить гостя</button>
+    </form>
+  </div>
+  {% else %}
+  <div class="card center muted">Достигнут лимит гостей на студента.</div>
+  {% endif %}
+</div>
+{% endblock %}

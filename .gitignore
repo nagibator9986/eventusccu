@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+
+# Flask / instance
+instance/
+*.db
+*.sqlite
+*.sqlite3
+
+# Окружение
+.env
+.env.*
+!.env.example
+
+# ОС / IDE
+.DS_Store
+.idea/
+.vscode/
+*.log

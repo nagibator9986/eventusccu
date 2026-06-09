@@ -1,0 +1,18 @@
+# CCU Invite — зависимости
+Flask==3.1.0
+Flask-SQLAlchemy==3.1.1
+Flask-Login==0.6.3
+Flask-WTF==1.2.2
+qrcode[pil]==8.0
+Pillow>=10.0
+python-dotenv>=1.0
+
+# Production WSGI-сервер (используется на Railway / в проде)
+gunicorn==23.0.0
+
+# Драйвер PostgreSQL — нужен, только если используете Postgres вместо SQLite
+# (на Railway можно подключить плагин Postgres). Для SQLite не задействуется.
+psycopg2-binary==2.9.10
+
+# Нужно только для локального HTTPS (`SSL_ADHOC=1`) — на Railway не требуется.
+cryptography>=42.0

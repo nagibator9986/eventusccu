@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Вход — {{ COLLEGE_NAME }}{% endblock %}
+
+{% block content %}
+<div class="auth">
+  <div class="auth__card">
+    <img class="auth__logo" src="{{ url_for('static', filename='img/logo.svg') }}" alt="{{ COLLEGE_SHORT }}">
+    <h1 class="auth__title">{{ COLLEGE_NAME }}</h1>
+    <p class="auth__sub">Система приглашений и контроля входа</p>
+
+    <form method="post" action="{{ url_for('auth.login', next=request.args.get('next')) }}" novalidate>
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="field">
+        <label for="username">Логин</label>
+        <input class="input" id="username" name="username" autocomplete="username"
+               autocapitalize="none" autocorrect="off" required autofocus>
+      </div>
+      <div class="field">
+        <label for="password">Пароль</label>
+        <input class="input" id="password" name="password" type="password"
+               autocomplete="current-password" required>
+      </div>
+      <label class="checkbox-row">
+        <input type="checkbox" name="remember" value="1"> Запомнить меня
+      </label>
+      <button class="btn btn--lg btn--block" type="submit">Войти</button>
+    </form>
+  </div>
+  <p class="auth__brand-foot">{{ COLLEGE_SITE }} · {{ current_year }}</p>
+</div>
+{% endblock %}
