@@ -65,15 +65,26 @@ def main() -> None:
     # если IMPORT_GENERATE_INVITES != "0".
     if os.environ.get("IMPORT_ON_DEPLOY", "1") != "0":
         try:
-            from scripts.import_data import DEFAULT_FILE, import_records, parse_workbook
+            from scripts.import_data import (
+                DEFAULT_FILE,
+                import_from_b64,
+                import_records,
+                parse_workbook,
+            )
 
-            if DEFAULT_FILE.exists():
+            gen = os.environ.get("IMPORT_GENERATE_INVITES", "1") != "0"
+            data_b64 = os.environ.get("IMPORT_DATA_B64")
+
+            if data_b64:
+                # Приватная загрузка данных без публикации в репозитории
+                stats = import_from_b64(data_b64.strip(), generate_invites=gen)
+                print(f"[release] импорт из IMPORT_DATA_B64: {stats}")
+            elif DEFAULT_FILE.exists():
                 records = parse_workbook(DEFAULT_FILE)
-                gen = os.environ.get("IMPORT_GENERATE_INVITES", "1") != "0"
                 stats = import_records(records, generate_invites=gen)
-                print(f"[release] импорт данных: {stats}")
+                print(f"[release] импорт из файла: {stats}")
             else:
-                print(f"[release] файл данных не найден ({DEFAULT_FILE}) — импорт пропущен")
+                print("[release] данных нет (ни IMPORT_DATA_B64, ни файл) — импорт пропущен")
         except Exception as exc:  # импорт не должен ронять деплой
             print(f"[release] предупреждение: импорт не выполнен: {exc}")
 

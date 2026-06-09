@@ -14,6 +14,9 @@
 ФИО в рамках студента).
 """
 import argparse
+import base64
+import gzip
+import json
 import re
 import sys
 from pathlib import Path
@@ -222,11 +225,26 @@ def import_records(records: list[dict], generate_invites: bool = True) -> dict:
     return stats
 
 
+def encode_records_b64(records: list[dict]) -> str:
+    """Сжать записи (JSON+gzip) и закодировать в base64 — для приватной
+    загрузки через переменную окружения IMPORT_DATA_B64 (без публикации ПДн)."""
+    payload = json.dumps(records, ensure_ascii=False).encode("utf-8")
+    return base64.b64encode(gzip.compress(payload)).decode("ascii")
+
+
+def import_from_b64(b64str: str, generate_invites: bool = True) -> dict:
+    """Импорт из строки base64(gzip(json(records)))."""
+    raw = gzip.decompress(base64.b64decode(b64str))
+    records = json.loads(raw.decode("utf-8"))
+    return import_records(records, generate_invites=generate_invites)
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description="Импорт выпускников и родителей из .xlsx")
     ap.add_argument("--file", default=str(DEFAULT_FILE), help="путь к .xlsx")
     ap.add_argument("--dry-run", action="store_true", help="только разбор, без записи")
     ap.add_argument("--no-invite", action="store_true", help="не генерировать пригласительные")
+    ap.add_argument("--encode", metavar="OUT", help="закодировать данные в base64 (для переменной IMPORT_DATA_B64) и записать в файл OUT")
     args = ap.parse_args()
 
     path = Path(args.file)
@@ -235,6 +253,15 @@ def main() -> None:
         sys.exit(1)
 
     records = parse_workbook(path)
+
+    if args.encode:
+        b64 = encode_records_b64(records)
+        Path(args.encode).write_text(b64, encoding="ascii")
+        print(f"[import] закодировано записей: {len(records)}")
+        print(f"[import] длина строки: {len(b64)} символов")
+        print(f"[import] сохранено в: {args.encode}")
+        print("[import] вставьте содержимое этого файла в переменную Railway IMPORT_DATA_B64")
+        return
     total = len(records)
     with_guest = sum(1 for r in records if r["guest_name"])
     no_guest = total - with_guest
